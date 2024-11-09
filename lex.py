@@ -53,6 +53,13 @@ class Lexer:
             token = Token(self.curChar, TokenType.ASTERISK)	# Asterisk token.
         elif self.curChar == '/':
             token = Token(self.curChar, TokenType.SLASH)	# Slash token.
+        elif self.curChar == '=':
+            if self.peek() == '=':
+                lastChar = self.curChar
+                self.nextChar()
+                token = Token(lastChar + self.curChar, TokenType.EQEQ)
+            else:
+                token = Token(self.curChar, TokenType.EQ)
         elif self.curChar == '\n':
             token = Token(self.curChar, TokenType.NEWLINE)	# Newline token.
         elif self.curChar == '\n':
