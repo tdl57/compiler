@@ -37,11 +37,14 @@ class Lexer:
 		
     # Skip comments in the code.
     def skipComment(self):
-        pass
+        if self.curChar == '#':
+            while self.curChar != '\n':
+                self.nextChar()
 
     # Return the next token.
     def getToken(self):
         self.skipWhitespace()
+        self.skipComment()
         token = None
         # Check the first character of this token to see if we can decide what it is.
         # If it is a multiple character operator (e.g., !=), number, identifier, or keyword then we will process the rest.
@@ -66,6 +69,19 @@ class Lexer:
             token = Token(self.curChar, TokenType.NEWLINE)
         elif self.curChar == '\0':
             token = Token('', TokenType.EOF)
+        elif self.curChar == '\"':
+            # Get characters between quotations.
+            self.nextChar()
+            startPos = self.curPos
+            while self.curChar != '\"':
+                # Don't allow special characters in the string. No escape characters, newlines, tabs, or %.
+                # We will be using C's printf on this string.
+                if self.curChar == '\r' or self.curChar == '\n' or self.curChar == '\t' or self.curChar == '\\' or self.curChar == '%':
+                    self.abort("Illegal character in string.")
+                self.nextChar()
+
+            tokText = self.source[startPos : self.curPos] # Get the substring.
+            token = Token(tokText, TokenType.STRING)
         else:
             # Unknown token!
             self.abort("Unknown token: " + self.curChar)
