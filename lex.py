@@ -82,6 +82,40 @@ class Lexer:
 
             tokText = self.source[startPos : self.curPos] # Get the substring.
             token = Token(tokText, TokenType.STRING)
+            
+        elif self.curChar.isdigit():
+            # Leading character is a digit, so this must be a number.
+            # Get all consecutive digits and decimal if there is one.
+            startPos = self.curPos
+            while self.peek().isdigit():
+                self.nextChar()
+            if self.peek() == '.': # Decimal!
+                self.nextChar()
+
+                # Must have at least one digit after decimal.
+                if not self.peek().isdigit(): 
+                    # Error!
+                    self.abort("Illegal character in number.")
+                while self.peek().isdigit():
+                    self.nextChar()
+
+            tokText = self.source[startPos : self.curPos + 1] # Get the substring.
+            token = Token(tokText, TokenType.NUMBER)
+        
+        elif self.curChar.isalpha():
+            # Leading character is a letter, so this must be an identifier or a keyword.
+            # Get all consecutive alpha numeric characters.
+            startPos = self.curPos
+            while self.peek().isalnum():
+                self.nextChar()
+
+            # Check if the token is in the list of keywords.
+            tokText = self.source[startPos : self.curPos + 1] # Get the substring.
+            keyword = Token.checkIfKeyword(tokText)
+            if keyword == None: # Identifier
+                token = Token(tokText, TokenType.IDENT)
+            else:   # Keyword
+                token = Token(tokText, keyword)
         else:
             # Unknown token!
             self.abort("Unknown token: " + self.curChar)
@@ -94,6 +128,14 @@ class Token:
     def __init__(self, tokenText, tokenKind):
         self.text = tokenText   # The token's actual text. Used for identifiers, strings, and numbers.
         self.kind = tokenKind   # The TokenType that this token is classified as.
+
+    @staticmethod
+    def checkIfKeyword(tokenText):
+        for kind in TokenType:
+            # Relies on all keyword enum values being 1XX.
+            if kind.name == tokenText and kind.value >= 100 and kind.value < 200:
+                return kind
+        return None
 
     # TokenType is our enum for all the types of tokens.
 class TokenType(enum.Enum):
